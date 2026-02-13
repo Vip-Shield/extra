@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  
+  <title>Controle Avançado de Horas Extras</title>
+  <link rel="shortcut icon" type="imagex/png" href="overtime.ico">
+
+  <style>
+    :root {
+      --bg: #020617;
+      --card: #0f172a;
+      --primary: #fbbf24;
+      --primary-hover: #f59e0b;
+      --ok: #10b981;      
+      --warn: #f59e0b;    
+      --purple: #a855f7;  
+      --danger: #ef4444;  
+      --night: #38bdf8;
+      --day: #fbbf24;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --gold-shadow: rgba(251, 191, 36, 0.2);
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top, #1e293b 0%, #020617 100%);
+      color: var(--text);
+      /* Ajuste para Safe Area (barra de gestos do iPhone/Android) */
+      padding: 15px 15px calc(40px + env(safe-area-inset-bottom)) 15px;
+      min-height: 100vh;
+    }
+
+    /* --- Cabeçalho Ajustado --- */
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto 20px auto;
+      padding-top: env(safe-area-inset-top); /* Protege contra o Notch no topo */
+      gap: 15px;
+    }
+
+    .header-text { flex: 1; }
+
+    .logo-app {
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
+      box-shadow: 0 8px 25px var(--gold-shadow);
+      border: 2px solid rgba(251, 191, 36, 0.3);
+      object-fit: cover;
+    }
+
+    h1 { 
+      margin: 0; 
+      font-size: 1.5rem; 
+      background: linear-gradient(to bottom, #fff, #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+    }
+
+    .limit-text { color: var(--muted); margin-top: 5px; font-size: 0.85rem; }
+
+    /* --- Controles Otimizados para Mobile --- */
+    .top-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 25px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Select Customizado para funcionar visualmente no iOS/Android */
+    select {
+      width: 100%;
+      padding: 12px 35px 12px 15px; /* Espaço extra na direita para a seta */
+      border-radius: 12px;
+      border: 1px solid rgba(251, 191, 36, 0.2);
+      background-color: var(--card);
+      color: white;
+      font-size: 1rem;
+      outline: none;
+      cursor: pointer;
+      appearance: none; /* Remove estilo nativo feio do SO */
+      -webkit-appearance: none;
+      /* Seta SVG encodada para garantir que apareça */
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fbbf24' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 16px;
+    }
+
+    select:focus { border-color: var(--primary); }
+
+    /* --- Dashboard --- */
+    .dashboard {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,0.05);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .card h3 { 
+      margin-top: 0; 
+      color: var(--primary); 
+      font-size: 1rem; 
+      text-transform: uppercase; 
+      letter-spacing: 1px;
+      margin-bottom: 15px;
+    }
+
+    /* Flex-wrap garante que não quebre em telas muito pequenas */
+    .summary-header {
+      display: flex; 
+      justify-content: space-between; 
+      align-items: flex-end;
+      flex-wrap: wrap; 
+      gap: 10px;
+    }
+
+    .progress {
+      background: #020617;
+      border-radius: 20px;
+      overflow: hidden;
+      height: 14px; 
+      margin: 15px 0;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .progress-bar {
+      height: 100%;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* --- Calendário Responsivo --- */
+    .calendar {
+      display: grid;
+      /* Ajustado minmax para 72px para caber 4 colunas em telas de 320px (iPhone SE antigo) */
+      grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+      gap: 8px;
+    }
+
+    .day {
+      background: #020617;
+      border-radius: 12px;
+      padding: 8px;
+      min-height: 90px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.03);
+      position: relative;
+      touch-action: manipulation; /* Melhora resposta ao toque */
+    }
+
+    .day:active { transform: scale(0.96); background: #1e293b; }
+
+    /* Status Visual */
+    .low { background: rgba(16, 185, 129, 0.08); border-left: 2px solid var(--ok); }
+    .medium { background: rgba(251, 191, 36, 0.08); border-left: 2px solid var(--warn); }
+    .twelve { background: rgba(168, 85, 247, 0.08); border-left: 2px solid var(--purple); }
+    .high { background: rgba(239, 68, 68, 0.08); border-left: 2px solid var(--danger); }
+
+    .badge {
+      font-size: 9px;
+      padding: 3px 4px;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    .daytime { background: var(--day); color: #000; }
+    .nighttime { background: var(--night); color: #000; }
+
+    /* --- Modal Mobile Friendly --- */
+    dialog {
+      border: 1px solid var(--primary);
+      border-radius: 20px;
+      padding: 25px;
+      background: #111827;
+      color: var(--text);
+      width: 90%;
+      max-width: 340px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
+      margin: auto;
+    }
+
+    dialog::backdrop { background: rgba(0,0,0,0.8); backdrop-filter: blur(3px); }
+
+    /* Área de toque maior para o fechar */
+    .close-btn {
+      cursor: pointer; 
+      font-size: 1.8rem; 
+      padding: 5px 10px;
+      margin: -10px -10px 0 0;
+      line-height: 1;
+      color: var(--muted);
+    }
+
+    dialog input, dialog select {
+      width: 100%;
+      padding: 14px;
+      margin-top: 6px;
+      margin-bottom: 18px;
+      background: #020617;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      color: white;
+      font-size: 1.1rem; /* Fonte maior para evitar zoom automático no iPhone */
+    }
+    
+    dialog input:focus, dialog select:focus { border-color: var(--primary); }
+
+    dialog button {
+      margin-top: 5px;
+      padding: 16px;
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      background: var(--primary);
+      color: #000;
+      font-weight: 800;
+      font-size: 1rem;
+      box-shadow: 0 4px 14px rgba(251, 191, 36, 0.4);
+    }
+    
+    dialog button:active { transform: scale(0.98); opacity: 0.9; }
+
+    @media (max-width: 900px) {
+      .dashboard { grid-template-columns: 1fr; }
+      .header-container { flex-direction: row; } /* Mantém lado a lado no mobile se possível */
+      h1 { font-size: 1.3rem; }
+      .calendar { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header-container">
+    <div class="header-text">
+      <h1>Controle de Horas</h1>
+      <p class="limit-text">Meta: <strong>120h</strong>/mês</p>
+    </div>
+    <a href="../dashboard.html" style="text-decoration: none;">
+      <img src="icon-512.png" alt="Logo HE" class="logo-app" onerror="this.src='https://placehold.co/90x90/orange/white?text=HE'">
+    </a>
+  </header>
+
+  <div class="top-controls">
+    <select id="month"></select>
+    <select id="year"></select>
+  </div>
+
+  <div class="dashboard">
+    <div class="card">
+      <h3>Resumo do Mês</h3>
+      <div class="summary-header">
+        <div>Total: <strong id="total" style="font-size: 1.4rem; color: #fff;">0</strong> h</div>
+        <div style="font-size: 0.9rem; color: var(--muted);">Restante: <strong id="remaining">120</strong> h</div>
+      </div>
+      
+      <div class="progress"><div id="bar" class="progress-bar"></div></div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9rem; margin-top: 15px;">
+        <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; text-align: center;">
+          <span style="display:block; font-size: 0.8em; color: var(--muted); margin-bottom: 2px;">DIURNA</span>
+          <strong id="dayTotal" style="color: var(--day); font-size: 1.3em">0</strong>
+        </div>
+        <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; text-align: center;">
+          <span style="display:block; font-size: 0.8em; color: var(--muted); margin-bottom: 2px;">NOTURNA</span>
+          <strong id="nightTotal" style="color: var(--night); font-size: 1.3em">0</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="display:flex; justify-content:space-between; align-items:center">
+        Lançamentos <span style="font-size:0.7em; color:var(--muted); opacity:0.6; font-weight:normal">Toque para editar</span>
+      </h3>
+      <div class="calendar" id="calendar"></div>
+    </div>
+  </div>
+
+  <dialog id="modal">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+      <div>
+        <h3 style="margin:0; font-size: 1.2rem">Editar Dia</h3>
+        <p id="modalDay" style="color: var(--primary); margin: 2px 0 0 0; font-weight: bold; font-size: 0.9rem"></p>
+      </div>
+      <span class="close-btn" onclick="modal.close()">&times;</span>
+    </div>
+    
+    <label style="font-size: 13px; color: var(--muted); display:block; margin-bottom:2px">Horas trabalhadas</label>
+    <input type="number" id="hoursInput" min="0" max="24" placeholder="0" inputmode="decimal" step="0.5" />
+    
+    <label style="font-size: 13px; color: var(--muted); display:block; margin-bottom:2px">Turno</label>
+    <select id="typeInput">
+      <option value="day">☀️ Diurna</option>
+      <option value="night">🌙 Noturna</option>
+    </select>
+    
+    <button onclick="saveHours()">SALVAR</button>
+  </dialog>
+
+  <script>
+    const calendar = document.getElementById('calendar');
+    const modal = document.getElementById('modal');
+    const modalDay = document.getElementById('modalDay');
+    const hoursInput = document.getElementById('hoursInput');
+    const typeInput = document.getElementById('typeInput');
+    const totalEl = document.getElementById('total');
+    const dayTotalEl = document.getElementById('dayTotal');
+    const nightTotalEl = document.getElementById('nightTotal');
+    const remainingEl = document.getElementById('remaining');
+    const bar = document.getElementById('bar');
+    const monthSelect = document.getElementById('month');
+    const yearSelect = document.getElementById('year');
+
+    const MAX_HOURS = 120;
+    let selectedDay;
+    let data = JSON.parse(localStorage.getItem('extraHoursAdvanced')) || {};
+
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) modal.close();
+    });
+
+    function initDateSelectors() {
+      const now = new Date();
+      const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+      
+      for (let m = 0; m < 12; m++) {
+        const monthName = new Date(0, m).toLocaleString('pt-BR', { month: 'long' });
+        monthSelect.innerHTML += `<option value="${m}">${capitalize(monthName)}</option>`;
+      }
+      for (let y = now.getFullYear() - 1; y <= now.getFullYear() + 2; y++) {
+        yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+      }
+      monthSelect.value = now.getMonth();
+      yearSelect.value = now.getFullYear();
+    }
+
+    function key() { return `${yearSelect.value}-${monthSelect.value}`; }
+    function daysInMonth() { return new Date(yearSelect.value, Number(monthSelect.value) + 1, 0).getDate(); }
+
+    function renderCalendar() {
+      calendar.innerHTML = '';
+      const k = key();
+      if (!data[k]) data[k] = {};
+
+      for (let i = 1; i <= daysInMonth(); i++) {
+        const entry = data[k][i] || { h: 0, t: 'day' };
+        const d = document.createElement('div');
+        d.className = 'day';
+
+        // Lógica de cores baseada nas horas
+        if (entry.h > 0 && entry.h <= 4) d.classList.add('low');
+        else if (entry.h > 4 && entry.h <= 8) d.classList.add('medium');
+        else if (entry.h === 12) d.classList.add('twelve');
+        else if (entry.h > 12) d.classList.add('high');
+
+        d.innerHTML = `
+          <div style="display:flex; justify-content:space-between; width:100%">
+            <small style="color:var(--muted); font-size:0.75em">Dia</small>
+            <strong style="font-size: 1em; color:var(--text)">${i}</strong>
+          </div>
+          <div style="font-weight: 800; font-size: 1.4em; text-align:center; color: ${entry.h > 0 ? 'var(--primary)' : 'rgba(255,255,255,0.1)'}">
+            ${entry.h > 0 ? entry.h : '-'}
+          </div>
+          ${entry.h ? `<span class="badge ${entry.t === 'night' ? 'nighttime' : 'daytime'}">${entry.t === 'night' ? 'Noturna' : 'Diurna'}</span>` : '<div style="height:15px"></div>'}
+        `;
+
+        d.onclick = () => openModal(i);
+        calendar.appendChild(d);
+      }
+      updateSummary();
+    }
+
+    function openModal(day) {
+      selectedDay = day;
+      const entry = data[key()][day] || { h: 0, t: 'day' };
+      modalDay.textContent = `${day} de ${monthSelect.options[monthSelect.selectedIndex].text}`;
+      hoursInput.value = entry.h === 0 ? '' : entry.h;
+      typeInput.value = entry.t;
+      modal.showModal();
+      // Pequeno delay para garantir que o teclado abra suavemente
+      setTimeout(() => hoursInput.focus(), 50);
+    }
+
+    function saveHours() {
+      let val = hoursInput.value === '' ? 0 : parseFloat(hoursInput.value); // Aceita decimais
+      if(val < 0) val = 0;
+      
+      data[key()][selectedDay] = { h: val, t: typeInput.value };
+      localStorage.setItem('extraHoursAdvanced', JSON.stringify(data));
+      modal.close();
+      renderCalendar();
+    }
+
+    function updateSummary() {
+      const entries = Object.values(data[key()] || {});
+      let total = 0, dayT = 0, nightT = 0;
+      entries.forEach(e => {
+        const h = parseFloat(e.h);
+        total += h;
+        e.t === 'night' ? nightT += h : dayT += h;
+      });
+      
+      // Formata para evitar dizimas feias, mas mantém inteiro se possível
+      const fmt = (n) => Number.isInteger(n) ? n : n.toFixed(1);
+
+      totalEl.textContent = fmt(total);
+      dayTotalEl.textContent = fmt(dayT);
+      nightTotalEl.textContent = fmt(nightT);
+      
+      const remaining = Math.max(0, MAX_HOURS - total);
+      remainingEl.textContent = fmt(remaining);
+      
+      const pct = Math.min(100, (total / MAX_HOURS) * 100);
+      bar.style.width = pct + '%';
+      bar.style.background = pct < 70 ? 'var(--ok)' : pct < 100 ? 'var(--warn)' : 'var(--danger)';
+      bar.style.boxShadow = `0 0 15px ${pct < 70 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(245, 158, 11, 0.4)'}`;
+    }
+
+    monthSelect.onchange = yearSelect.onchange = renderCalendar;
+    initDateSelectors();
+    renderCalendar();
+  </script>
+
+</body>
+</html>
