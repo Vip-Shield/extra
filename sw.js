@@ -1,6 +1,5 @@
-const CACHE_NAME = 'extras-cache-v1';
-
-const FILES_TO_CACHE = [
+const CACHE_NAME = 'horas-extras-v1';
+const ASSETS = [
   './',
   './index.html',
   './manifest.json',
@@ -8,16 +7,29 @@ const FILES_TO_CACHE = [
   './icon-512.png'
 ];
 
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(FILES_TO_CACHE))
+// Instalação: Cacheia os arquivos estáticos
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
   );
 });
 
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(
-      response => response || fetch(event.request)
-    )
+// Fetch: Serve o cache se estiver offline
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then((response) => {
+      return response || fetch(e.request);
+    })
+  );
+});
+
+// Ativação: Limpa caches antigos se mudar a versão
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+      );
+    })
   );
 });

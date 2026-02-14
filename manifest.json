@@ -1,12 +1,11 @@
 {
-  "name": "Controle Profissional de Extras",
-  "short_name": "Extras",
+  "name": "Controle Avançado de Horas",
+  "short_name": "Horas Extras",
   "start_url": "./index.html",
-  "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#020617",
-  "theme_color": "#0f172a",
+  "theme_color": "#020617",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "icon-192.png",
