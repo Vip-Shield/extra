@@ -42,6 +42,48 @@
       padding: 15px 15px calc(40px + env(safe-area-inset-bottom)) 15px;
       min-height: 100vh;
       overscroll-behavior-y: none;
+      position: relative;
+    }
+
+    /* --- RELÓGIO DE FUNDO VINTAGE --- */
+    .bg-clock {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90vw;
+      max-width: 450px;
+      opacity: 0.04; /* Discreto para não atrapalhar leitura */
+      z-index: -1; /* Fica no fundo */
+      pointer-events: none;
+      color: var(--primary);
+      transition: opacity 0.3s, color 0.3s;
+    }
+
+    /* Eixo de rotação dos ponteiros e animação realista */
+    #hour-hand, #min-hand, #sec-hand {
+      transform-origin: 50px 60px;
+    }
+    
+    #sec-hand {
+      transition: transform 0.1s cubic-bezier(0.4, 2.08, 0.55, 0.44); /* Efeito de 'tick' do ponteiro */
+    }
+
+    /* Animação do Relógio Tocando */
+    @keyframes ringShake {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      10% { transform: translate(-50%, -50%) rotate(-6deg); }
+      20% { transform: translate(-50%, -50%) rotate(6deg); }
+      30% { transform: translate(-50%, -50%) rotate(-6deg); }
+      40% { transform: translate(-50%, -50%) rotate(6deg); }
+      50% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(0deg); }
+    }
+
+    .bg-clock.ringing {
+      animation: ringShake 0.3s infinite;
+      opacity: 0.15;
+      color: var(--danger);
     }
 
     .header-container {
@@ -61,7 +103,6 @@
       position: relative;
       cursor: pointer;
       transition: transform 0.2s;
-      -webkit-tap-highlight-color: transparent;
     }
     
     .logo-container:active { transform: scale(0.95); }
@@ -93,7 +134,7 @@
 
     h1 { 
       margin: 0; 
-      font-size: 1.5rem; 
+      font-size: 1.6rem; 
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -206,6 +247,7 @@
       padding: 20px;
       border: 1px solid rgba(255,255,255,0.05);
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      position: relative;
     }
 
     .card h3 { 
@@ -349,7 +391,6 @@
     @media (max-width: 900px) {
       .dashboard { grid-template-columns: 1fr; }
       .header-container { flex-direction: row; }
-      h1 { font-size: 1.3rem; }
       .calendar { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
       dialog { max-height: 90vh; overflow-y: auto; }
     }
@@ -359,9 +400,33 @@
 
   <audio id="alarmSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
+  <svg class="bg-clock" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+    <line x1="28" y1="85" x2="18" y2="105" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+    <line x1="72" y1="85" x2="82" y2="105" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+    
+    <path d="M 45 25 C 20 15, 10 35, 20 45" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M 55 25 C 80 15, 90 35, 80 45" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
+    
+    <circle cx="50" cy="16" r="4" fill="currentColor" />
+    <line x1="50" y1="20" x2="50" y2="30" stroke="currentColor" stroke-width="3"/>
+    
+    <circle cx="50" cy="60" r="32" fill="var(--bg)" stroke="currentColor" stroke-width="6"/>
+    
+    <line x1="50" y1="34" x2="50" y2="39" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <line x1="50" y1="81" x2="50" y2="86" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <line x1="24" y1="60" x2="29" y2="60" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <line x1="71" y1="60" x2="76" y2="60" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+
+    <line id="hour-hand" x1="50" y1="60" x2="50" y2="45" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+    <line id="min-hand" x1="50" y1="60" x2="50" y2="36" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <line id="sec-hand" x1="50" y1="65" x2="50" y2="34" stroke="var(--danger)" stroke-width="2" stroke-linecap="round"/>
+    
+    <circle cx="50" cy="60" r="3" fill="var(--primary-hover)" />
+  </svg>
+
   <header class="header-container">
     <div class="header-text">
-      <h1>Controle de Horas</h1>
+      <h1>ContROLE DE HORAS</h1>
       <p class="limit-text">Cota Mensal: <strong style="color:var(--text)">120h</strong></p>
     </div>
     <div class="logo-container" onclick="openDonateModal()" title="Apoiar o App">
@@ -518,6 +583,7 @@
     const monthSelect = document.getElementById('month');
     const yearSelect = document.getElementById('year');
     const alarmSound = document.getElementById('alarmSound');
+    const bgClock = document.querySelector('.bg-clock');
 
     let selectedDay;
     let data = JSON.parse(localStorage.getItem('pmServiceData')) || {};
@@ -529,10 +595,27 @@
       rasAllowance: 13.00
     };
 
-    // Fechar modais ao clicar fora
     [modal, configModal, donateModal].forEach(m => {
       m.addEventListener('click', (event) => { if (event.target === m) m.close(); });
     });
+
+    // --- LÓGICA DOS PONTEIROS DO RELÓGIO DE FUNDO ---
+    function updateClockHands() {
+      const now = new Date();
+      const sec = now.getSeconds();
+      const min = now.getMinutes();
+      const hour = now.getHours();
+
+      const secDeg = sec * 6;
+      const minDeg = min * 6 + (sec * 0.1);
+      const hourDeg = (hour % 12) * 30 + (min * 0.5);
+
+      document.getElementById('sec-hand').style.transform = `rotate(${secDeg}deg)`;
+      document.getElementById('min-hand').style.transform = `rotate(${minDeg}deg)`;
+      document.getElementById('hour-hand').style.transform = `rotate(${hourDeg}deg)`;
+    }
+    setInterval(updateClockHands, 1000);
+    updateClockHands();
 
     function initDateSelectors() {
       const now = new Date();
@@ -579,13 +662,11 @@
         if (isPastDay && !isToday) d.classList.add('past-day');
         if (isToday) d.classList.add('today-highlight');
 
-        // Borda de acordo com as horas
         if (entry.h > 0 && entry.h <= 6) d.classList.add('low');
         else if (entry.h > 6 && entry.h <= 8) d.classList.add('medium');
         else if (entry.h === 12) d.classList.add('twelve');
         else if (entry.h > 12) d.classList.add('high');
 
-        // Define cor e ícone baseados no turno (Diurno/Noturno)
         const shiftColor = entry.h > 0 ? (entry.s === 'night' ? 'var(--night)' : 'var(--day)') : 'rgba(255,255,255,0.1)';
         const shiftIcon = entry.h > 0 ? (entry.s === 'night' ? '🌙' : '☀️') : '';
 
@@ -645,13 +726,15 @@
       }
 
       if (hasService) {
+        // Toca som e faz o relógio do fundo tremer
         alarmSound.play().catch(e => console.log("Áudio bloqueado."));
+        bgClock.classList.add('ringing');
+        setTimeout(() => bgClock.classList.remove('ringing'), 4000); // Para após 4 segundos
       }
 
       alert(`⏰ ALERTA DE SERVIÇOS ⏰\n\n${msg}\nBom descanso e bom serviço, combatente!`);
     }
 
-    // --- FUNÇÕES DE DOAÇÃO ---
     function openDonateModal() {
       donateModal.showModal();
     }
