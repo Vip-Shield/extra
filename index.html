@@ -56,6 +56,16 @@
 
     .header-text { flex: 1; }
 
+    /* Estilização do bloco da Logo para doação */
+    .logo-container {
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .logo-container:active { transform: scale(0.95); }
+
     .logo-app {
       width: 60px;
       height: 60px;
@@ -65,18 +75,32 @@
       object-fit: cover;
     }
 
-    /* --- TÍTULO ESTILIZADO --- */
+    .donate-badge {
+      position: absolute;
+      bottom: -6px;
+      right: -6px;
+      background: #ef4444;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
     h1 { 
       margin: 0; 
-      font-size: 1.6rem; 
+      font-size: 1.5rem; 
       font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      background: linear-gradient(135deg, #fff 0%, #fbbf24 100%);
+      letter-spacing: 0.5px;
+      background: linear-gradient(to bottom, #fff, #fbbf24);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       line-height: 1.2;
-      filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.6));
     }
 
     .limit-text { color: var(--muted); margin-top: 5px; font-size: 0.85rem; font-weight: 500;}
@@ -340,7 +364,10 @@
       <h1>Controle de Horas</h1>
       <p class="limit-text">Cota Mensal: <strong style="color:var(--text)">120h</strong></p>
     </div>
-    <img src="icon-512.png" alt="Logo" class="logo-app" onerror="this.src='https://placehold.co/90x90/orange/white?text=PM'">
+    <div class="logo-container" onclick="openDonateModal()" title="Apoiar o App">
+      <img src="icon-512.png" alt="Logo" class="logo-app" onerror="this.src='https://placehold.co/90x90/orange/white?text=PM'">
+      <div class="donate-badge">💖</div>
+    </div>
   </header>
 
   <div class="top-controls">
@@ -350,7 +377,7 @@
       <button class="btn-icon" onclick="backupData()" title="Salvar Backup">💾</button>
       <button class="btn-icon" onclick="openConfigModal()" title="Configurações">⚙️</button>
     </div>
-    <button class="btn-action" onclick="checkTodayAlarm()">🔔 Checar Serviço de Hoje</button>
+    <button class="btn-action" onclick="checkAlarms()">🔔 Checar Serviços (Hoje/Amanhã)</button>
   </div>
 
   <div class="dashboard">
@@ -396,6 +423,26 @@
       <div class="calendar" id="calendar"></div>
     </div>
   </div>
+
+  <dialog id="donateModal">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+      <h3 style="margin:0; font-size: 1.2rem; color: var(--primary);">Apoie o Projeto 👮‍♂️</h3>
+      <span class="close-btn" onclick="donateModal.close()">&times;</span>
+    </div>
+    <p style="font-size: 0.95rem; color: var(--muted); line-height: 1.5; margin-bottom: 20px;">
+      Este app foi feito para facilitar sua rotina. Se ele tem sido útil, considere fazer uma doação simbólica de <strong>R$ 1,00</strong> pelo PIX para apoiar o desenvolvedor e manter as atualizações!
+    </p>
+    
+    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; text-align: center; border: 1px dashed var(--primary); margin-bottom: 15px;">
+      <p style="margin: 0 0 5px 0; font-size: 0.85rem; color: var(--text);">Chave PIX:</p>
+      <strong id="pixKey" style="font-size: 1.1rem; color: var(--primary); word-break: break-all;">21982539175</strong>
+    </div>
+
+    <button onclick="copyPix()" style="background: #25D366; color: #fff; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; padding: 14px;">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      Copiar Chave PIX
+    </button>
+  </dialog>
 
   <dialog id="modal">
     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
@@ -457,6 +504,7 @@
     const calendar = document.getElementById('calendar');
     const modal = document.getElementById('modal');
     const configModal = document.getElementById('configModal');
+    const donateModal = document.getElementById('donateModal');
     const modalDay = document.getElementById('modalDay');
     const hoursInput = document.getElementById('hoursInput');
     const typeInput = document.getElementById('typeInput');
@@ -481,7 +529,8 @@
       rasAllowance: 13.00
     };
 
-    [modal, configModal].forEach(m => {
+    // Fechar modais ao clicar fora
+    [modal, configModal, donateModal].forEach(m => {
       m.addEventListener('click', (event) => { if (event.target === m) m.close(); });
     });
 
@@ -558,36 +607,72 @@
       updateSummary();
     }
 
-    function checkTodayAlarm() {
+    function checkAlarms() {
       const today = new Date();
       const tYear = today.getFullYear();
       const tMonth = today.getMonth();
       const tDay = today.getDate();
       const todayKey = `${tYear}-${tMonth}`;
       
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomYear = tomorrow.getFullYear();
+      const tomMonth = tomorrow.getMonth();
+      const tomDay = tomorrow.getDate();
+      const tomorrowKey = `${tomYear}-${tomMonth}`;
+
+      let msg = "";
+      let hasService = false;
+
       if (data[todayKey] && data[todayKey][tDay] && data[todayKey][tDay].h > 0) {
         const horas = data[todayKey][tDay].h;
         const periodo = data[todayKey][tDay].t.toUpperCase();
         const turno = data[todayKey][tDay].s === 'night' ? 'Noturno' : 'Diurno';
-        alarmSound.play().catch(e => console.log("Áudio bloqueado."));
-        alert(`⏰ AVISO DE SERVIÇO!\n\nHoje você está escalado para ${horas} horas de ${periodo} (${turno}).\n\nBom serviço, combatente!`);
+        msg += `🚨 HOJE: Escala de ${horas}h de ${periodo} (${turno}).\n`;
+        hasService = true;
       } else {
-        alert("Nenhum serviço programado para o dia de hoje. Bom descanso!");
+        msg += `✅ HOJE: Sem serviço (Folga).\n`;
       }
+
+      if (data[tomorrowKey] && data[tomorrowKey][tomDay] && data[tomorrowKey][tomDay].h > 0) {
+        const horas = data[tomorrowKey][tomDay].h;
+        const periodo = data[tomorrowKey][tomDay].t.toUpperCase();
+        const turno = data[tomorrowKey][tomDay].s === 'night' ? 'Noturno' : 'Diurno';
+        msg += `\n🚨 AMANHÃ: Prepare fardamento! Escala de ${horas}h de ${periodo} (${turno}).\n`;
+        hasService = true;
+      } else {
+        msg += `\n✅ AMANHÃ: Sem serviço (Folga).\n`;
+      }
+
+      if (hasService) {
+        alarmSound.play().catch(e => console.log("Áudio bloqueado."));
+      }
+
+      alert(`⏰ ALERTA DE SERVIÇOS ⏰\n\n${msg}\nBom descanso e bom serviço, combatente!`);
     }
 
-    // --- FUNÇÃO NOVA: FAZER BACKUP ---
+    // --- FUNÇÕES DE DOAÇÃO ---
+    function openDonateModal() {
+      donateModal.showModal();
+    }
+
+    function copyPix() {
+      const pixKey = document.getElementById('pixKey').innerText;
+      navigator.clipboard.writeText(pixKey).then(() => {
+        alert("Chave PIX copiada com sucesso!\nObrigado pela moral, combatente! 🚓");
+      }).catch(err => {
+        alert("Erro ao copiar a chave. Tente selecionar e copiar manualmente.");
+      });
+    }
+
     function backupData() {
-      // Junta os dados e as configurações em um único arquivo
       const exportData = {
         escala: JSON.parse(localStorage.getItem('pmServiceData')) || {},
         config: JSON.parse(localStorage.getItem('pmConfig')) || {}
       };
       
-      // Converte para texto
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
       
-      // Cria um link invisível para forçar o download
       const downloadAnchorNode = document.createElement('a');
       downloadAnchorNode.setAttribute("href", dataStr);
       downloadAnchorNode.setAttribute("download", "backup_escala_pm.json");
@@ -595,7 +680,7 @@
       downloadAnchorNode.click();
       downloadAnchorNode.remove();
       
-      alert("✅ Backup salvo!\nO arquivo 'backup_escala_pm.json' foi salvo na pasta de downloads do seu celular.");
+      alert("✅ Backup salvo!\nO arquivo 'backup_escala_pm.json' foi baixado no seu dispositivo.");
     }
 
     function openConfigModal() {
