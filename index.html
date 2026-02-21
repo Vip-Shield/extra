@@ -4,14 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   
-  <title>Controle Avançado de Horas Extras</title>
+  <title>Controle de Serviço - PM</title>
   <meta name="theme-color" content="#020617">
   <link rel="manifest" href="manifest.json">
   <link rel="shortcut icon" type="image/png" href="icon-192.png">
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Horas Extras">
+  <meta name="apple-mobile-web-app-title" content="Controle RAS/PROEIS">
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <style>
@@ -24,8 +24,10 @@
       --warn: #f59e0b;    
       --purple: #a855f7;  
       --danger: #ef4444;  
-      --night: #38bdf8;
-      --day: #fbbf24;
+      --proeis: #3b82f6; 
+      --ras: #fbbf24; 
+      --day: #fbbf24;     
+      --night: #38bdf8;   
       --text: #f8fafc;
       --muted: #94a3b8;
       --gold-shadow: rgba(251, 191, 36, 0.2);
@@ -39,7 +41,7 @@
       color: var(--text);
       padding: 15px 15px calc(40px + env(safe-area-inset-bottom)) 15px;
       min-height: 100vh;
-      overscroll-behavior-y: none; /* Evita o "bounce" ao rolar o fim da página no app */
+      overscroll-behavior-y: none;
     }
 
     .header-container {
@@ -63,24 +65,36 @@
       object-fit: cover;
     }
 
+    /* --- TÍTULO ESTILIZADO --- */
     h1 { 
       margin: 0; 
-      font-size: 1.5rem; 
-      background: linear-gradient(to bottom, #fff, #fbbf24);
+      font-size: 1.6rem; 
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, #fff 0%, #fbbf24 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       line-height: 1.2;
+      filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.6));
     }
 
-    .limit-text { color: var(--muted); margin-top: 5px; font-size: 0.85rem; }
+    .limit-text { color: var(--muted); margin-top: 5px; font-size: 0.85rem; font-weight: 500;}
 
     .top-controls {
       display: flex;
+      flex-direction: column;
       gap: 10px;
       margin-bottom: 25px;
       max-width: 1200px;
       margin-left: auto;
       margin-right: auto;
+    }
+
+    .select-group {
+      display: flex;
+      gap: 8px;
+      width: 100%;
     }
 
     select {
@@ -102,6 +116,57 @@
     }
 
     select:focus { border-color: var(--primary); }
+
+    .btn-icon {
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(251, 191, 36, 0.5);
+      background-color: var(--card);
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      transition: all 0.2s;
+    }
+
+    .btn-icon:active { transform: scale(0.92); background: #1e293b; }
+
+    .btn-action {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--ok);
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--ok);
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-action:hover, .btn-action:active { background: var(--ok); color: #000; }
+
+    .btn-whatsapp {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      border-radius: 12px;
+      border: none;
+      background: #25D366;
+      color: #fff;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+      transition: all 0.2s;
+    }
+    .btn-whatsapp:active { transform: scale(0.98); background: #1da851; }
 
     .dashboard {
       display: grid;
@@ -134,6 +199,23 @@
       align-items: flex-end;
       flex-wrap: wrap; 
       gap: 10px;
+    }
+
+    .financial-summary {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 15px;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    .financial-summary strong {
+      font-size: 1.4rem;
+      color: var(--ok);
+      display: block;
+      margin-top: 5px;
     }
 
     .progress {
@@ -172,23 +254,33 @@
 
     .day:active { transform: scale(0.96); background: #1e293b; }
 
+    .past-day { opacity: 0.4; filter: grayscale(80%); border-color: transparent; background: rgba(15, 23, 42, 0.5); }
+    
+    .today-highlight {
+      border: 2px solid var(--primary) !important;
+      box-shadow: 0 0 15px var(--gold-shadow);
+      background: rgba(251, 191, 36, 0.1) !important;
+      opacity: 1; filter: none;
+    }
+
+    .today-badge {
+      position: absolute; top: -8px; right: -5px; background: var(--primary);
+      color: #000; font-size: 9px; font-weight: 800; padding: 2px 6px;
+      border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); z-index: 2;
+    }
+
     .low { background: rgba(16, 185, 129, 0.08); border-left: 2px solid var(--ok); }
     .medium { background: rgba(251, 191, 36, 0.08); border-left: 2px solid var(--warn); }
     .twelve { background: rgba(168, 85, 247, 0.08); border-left: 2px solid var(--purple); }
     .high { background: rgba(239, 68, 68, 0.08); border-left: 2px solid var(--danger); }
 
     .badge {
-      font-size: 9px;
-      padding: 3px 4px;
-      border-radius: 4px;
-      font-weight: 700;
-      text-transform: uppercase;
-      text-align: center;
-      margin-top: 2px;
+      font-size: 9px; padding: 3px 4px; border-radius: 4px;
+      font-weight: 700; text-transform: uppercase; text-align: center; margin-top: 2px;
     }
 
-    .daytime { background: var(--day); color: #000; }
-    .nighttime { background: var(--night); color: #000; }
+    .badge-proeis { background: var(--proeis); color: #fff; }
+    .badge-ras { background: var(--ras); color: #000; }
 
     dialog {
       border: 1px solid var(--primary);
@@ -205,64 +297,60 @@
     dialog::backdrop { background: rgba(0,0,0,0.8); backdrop-filter: blur(3px); }
 
     .close-btn {
-      cursor: pointer; 
-      font-size: 1.8rem; 
-      padding: 5px 10px;
-      margin: -10px -10px 0 0;
-      line-height: 1;
-      color: var(--muted);
+      cursor: pointer; font-size: 1.8rem; padding: 5px 10px;
+      margin: -10px -10px 0 0; line-height: 1; color: var(--muted);
     }
 
     dialog input, dialog select {
-      width: 100%;
-      padding: 14px;
-      margin-top: 6px;
-      margin-bottom: 18px;
-      background: #020617;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      color: white;
-      font-size: 1.1rem;
+      width: 100%; padding: 14px; margin-top: 6px; margin-bottom: 12px;
+      background: #020617; border: 1px solid #334155; border-radius: 10px;
+      color: white; font-size: 1.1rem;
     }
     
     dialog input:focus, dialog select:focus { border-color: var(--primary); }
 
     dialog button {
-      margin-top: 5px;
-      padding: 16px;
-      width: 100%;
-      border: none;
-      border-radius: 12px;
-      background: var(--primary);
-      color: #000;
-      font-weight: 800;
-      font-size: 1rem;
-      box-shadow: 0 4px 14px rgba(251, 191, 36, 0.4);
+      margin-top: 10px; padding: 16px; width: 100%; border: none;
+      border-radius: 12px; background: var(--primary); color: #000;
+      font-weight: 800; font-size: 1rem; box-shadow: 0 4px 14px rgba(251, 191, 36, 0.4);
+      cursor: pointer;
     }
     
     dialog button:active { transform: scale(0.98); opacity: 0.9; }
+
+    .hint-text { font-size: 12px; color: var(--muted); margin-top: -6px; margin-bottom: 12px; display: block; }
+    
+    .divider { height: 1px; background: rgba(255,255,255,0.1); margin: 15px 0; }
 
     @media (max-width: 900px) {
       .dashboard { grid-template-columns: 1fr; }
       .header-container { flex-direction: row; }
       h1 { font-size: 1.3rem; }
       .calendar { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
+      dialog { max-height: 90vh; overflow-y: auto; }
     }
   </style>
 </head>
 <body>
 
+  <audio id="alarmSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
   <header class="header-container">
     <div class="header-text">
       <h1>Controle de Horas</h1>
-      <p class="limit-text">Meta: <strong>120h</strong>/mês</p>
+      <p class="limit-text">Cota Mensal: <strong style="color:var(--text)">120h</strong></p>
     </div>
-    <img src="icon-512.png" alt="Logo HE" class="logo-app" onerror="this.src='https://placehold.co/90x90/orange/white?text=HE'">
+    <img src="icon-512.png" alt="Logo" class="logo-app" onerror="this.src='https://placehold.co/90x90/orange/white?text=PM'">
   </header>
 
   <div class="top-controls">
-    <select id="month"></select>
-    <select id="year"></select>
+    <div class="select-group">
+      <select id="month"></select>
+      <select id="year"></select>
+      <button class="btn-icon" onclick="backupData()" title="Salvar Backup">💾</button>
+      <button class="btn-icon" onclick="openConfigModal()" title="Configurações">⚙️</button>
+    </div>
+    <button class="btn-action" onclick="checkTodayAlarm()">🔔 Checar Serviço de Hoje</button>
   </div>
 
   <div class="dashboard">
@@ -277,19 +365,33 @@
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9rem; margin-top: 15px;">
         <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; text-align: center;">
-          <span style="display:block; font-size: 0.8em; color: var(--muted); margin-bottom: 2px;">DIURNA</span>
-          <strong id="dayTotal" style="color: var(--day); font-size: 1.3em">0</strong>
+          <span style="display:block; font-size: 0.8em; color: var(--muted); margin-bottom: 2px;">PROEIS</span>
+          <strong id="proeisTotal" style="color: var(--proeis); font-size: 1.3em">0</strong> h
         </div>
         <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; text-align: center;">
-          <span style="display:block; font-size: 0.8em; color: var(--muted); margin-bottom: 2px;">NOTURNA</span>
-          <strong id="nightTotal" style="color: var(--night); font-size: 1.3em">0</strong>
+          <span style="display:block; font-size: 0.8em; color: var(--muted); margin-bottom: 2px;">RAS</span>
+          <strong id="rasTotal" style="color: var(--ras); font-size: 1.3em">0</strong> h
         </div>
       </div>
+
+      <div class="financial-summary">
+        Estimativa a Receber
+        <strong id="moneyTotal">R$ 0,00</strong>
+        <span style="font-size: 11px; color: var(--muted); display: block; margin-top: 4px;">(Inclui Ajuda de Custo/Passagem)</span>
+      </div>
+
+      <button class="btn-whatsapp" onclick="exportToWhatsApp()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+        </svg>
+        Exportar para o WhatsApp
+      </button>
+
     </div>
 
     <div class="card">
       <h3 style="display:flex; justify-content:space-between; align-items:center">
-        Lançamentos <span style="font-size:0.7em; color:var(--muted); opacity:0.6; font-weight:normal">Toque para editar</span>
+        LANÇAMENTOS <span style="font-size:0.7em; color:var(--muted); opacity:0.6; font-weight:normal">Toque no dia</span>
       </h3>
       <div class="calendar" id="calendar"></div>
     </div>
@@ -298,44 +400,89 @@
   <dialog id="modal">
     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
       <div>
-        <h3 style="margin:0; font-size: 1.2rem">Editar Dia</h3>
+        <h3 style="margin:0; font-size: 1.2rem">Lançar Serviço</h3>
         <p id="modalDay" style="color: var(--primary); margin: 2px 0 0 0; font-weight: bold; font-size: 0.9rem"></p>
       </div>
       <span class="close-btn" onclick="modal.close()">&times;</span>
     </div>
     
-    <label style="font-size: 13px; color: var(--muted); display:block; margin-bottom:2px">Horas trabalhadas</label>
-    <input type="number" id="hoursInput" min="0" max="24" placeholder="0" inputmode="decimal" step="0.5" />
+    <label style="font-size: 13px; color: var(--muted); display:block; margin-bottom:2px">Horas (Cota)</label>
+    <input type="number" id="hoursInput" min="0" max="24" placeholder="Ex: 12" inputmode="decimal" step="0.5" />
     
-    <label style="font-size: 13px; color: var(--muted); display:block; margin-bottom:2px">Turno</label>
+    <label style="font-size: 13px; color: var(--muted); display:block; margin-bottom:2px">Tipo de Serviço</label>
     <select id="typeInput">
-      <option value="day">☀️ Diurna</option>
-      <option value="night">🌙 Noturna</option>
+      <option value="proeis">👮 PROEIS</option>
+      <option value="ras">🚓 RAS</option>
+    </select>
+
+    <label style="font-size: 13px; color: var(--muted); display:block; margin-bottom:2px">Turno</label>
+    <select id="shiftInput">
+      <option value="day">☀️ Diurno</option>
+      <option value="night">🌙 Noturno</option>
     </select>
     
     <button onclick="saveHours()">SALVAR</button>
   </dialog>
 
+  <dialog id="configModal">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+      <h3 style="margin:0; font-size: 1.2rem; color: var(--primary);">Configurações</h3>
+      <span class="close-btn" onclick="configModal.close()">&times;</span>
+    </div>
+    
+    <label style="font-size: 13px; color: var(--muted); display:block; margin-bottom:2px">Sua Graduação</label>
+    <select id="rankInput">
+      <option value="SD">Soldado (SD)</option>
+      <option value="CB_SGT">Cabo / Sargento (CB/SGT)</option>
+    </select>
+    <span class="hint-text">Define o valor base de R$ 333 ou R$ 444.</span>
+
+    <label style="font-size: 13px; color: var(--muted); display:block; margin-bottom:2px">Cota Mensal Máxima (Horas)</label>
+    <input type="number" id="maxHoursInput" min="0" placeholder="Ex: 120" />
+    
+    <div class="divider"></div>
+
+    <h4 style="margin: 0 0 10px 0; font-size: 1rem; color: var(--primary);">Ajuda de Custo (R$)</h4>
+
+    <label style="font-size: 13px; color: var(--muted); display:block; margin-bottom:2px">PROEIS (Passagem/Alimentação)</label>
+    <input type="number" id="proeisAllowanceInput" min="0" step="0.01" placeholder="Ex: 35.00" />
+
+    <label style="font-size: 13px; color: var(--muted); display:block; margin-bottom:2px">RAS (Passagem)</label>
+    <input type="number" id="rasAllowanceInput" min="0" step="0.01" placeholder="Ex: 13.00" />
+    
+    <button onclick="saveConfig()" style="background: var(--ok); color: #000;">SALVAR CONFIGURAÇÕES</button>
+  </dialog>
+
   <script>
     const calendar = document.getElementById('calendar');
     const modal = document.getElementById('modal');
+    const configModal = document.getElementById('configModal');
     const modalDay = document.getElementById('modalDay');
     const hoursInput = document.getElementById('hoursInput');
     const typeInput = document.getElementById('typeInput');
+    const shiftInput = document.getElementById('shiftInput');
     const totalEl = document.getElementById('total');
-    const dayTotalEl = document.getElementById('dayTotal');
-    const nightTotalEl = document.getElementById('nightTotal');
+    const proeisTotalEl = document.getElementById('proeisTotal');
+    const rasTotalEl = document.getElementById('rasTotal');
+    const moneyTotalEl = document.getElementById('moneyTotal');
     const remainingEl = document.getElementById('remaining');
     const bar = document.getElementById('bar');
     const monthSelect = document.getElementById('month');
     const yearSelect = document.getElementById('year');
+    const alarmSound = document.getElementById('alarmSound');
 
-    const MAX_HOURS = 120;
     let selectedDay;
-    let data = JSON.parse(localStorage.getItem('extraHoursAdvanced')) || {};
+    let data = JSON.parse(localStorage.getItem('pmServiceData')) || {};
+    
+    let config = JSON.parse(localStorage.getItem('pmConfig')) || { 
+      rank: 'CB_SGT', 
+      maxHours: 120,
+      proeisAllowance: 35.00,
+      rasAllowance: 13.00
+    };
 
-    modal.addEventListener('click', (event) => {
-        if (event.target === modal) modal.close();
+    [modal, configModal].forEach(m => {
+      m.addEventListener('click', (event) => { if (event.target === m) m.close(); });
     });
 
     function initDateSelectors() {
@@ -361,25 +508,48 @@
       const k = key();
       if (!data[k]) data[k] = {};
 
+      const todayDate = new Date();
+      const currentYear = todayDate.getFullYear();
+      const currentMonth = todayDate.getMonth();
+      const currentDay = todayDate.getDate();
+
       for (let i = 1; i <= daysInMonth(); i++) {
-        const entry = data[k][i] || { h: 0, t: 'day' };
+        const entry = data[k][i] || { h: 0, t: 'proeis', s: 'day' };
         const d = document.createElement('div');
         d.className = 'day';
 
-        if (entry.h > 0 && entry.h <= 4) d.classList.add('low');
-        else if (entry.h > 4 && entry.h <= 8) d.classList.add('medium');
+        const selYear = Number(yearSelect.value);
+        const selMonth = Number(monthSelect.value);
+        
+        const isPastDay = (selYear < currentYear) || 
+                          (selYear === currentYear && selMonth < currentMonth) || 
+                          (selYear === currentYear && selMonth === currentMonth && i < currentDay);
+                          
+        const isToday = (selYear === currentYear && selMonth === currentMonth && i === currentDay);
+
+        if (isPastDay && !isToday) d.classList.add('past-day');
+        if (isToday) d.classList.add('today-highlight');
+
+        // Borda de acordo com as horas
+        if (entry.h > 0 && entry.h <= 6) d.classList.add('low');
+        else if (entry.h > 6 && entry.h <= 8) d.classList.add('medium');
         else if (entry.h === 12) d.classList.add('twelve');
         else if (entry.h > 12) d.classList.add('high');
 
+        // Define cor e ícone baseados no turno (Diurno/Noturno)
+        const shiftColor = entry.h > 0 ? (entry.s === 'night' ? 'var(--night)' : 'var(--day)') : 'rgba(255,255,255,0.1)';
+        const shiftIcon = entry.h > 0 ? (entry.s === 'night' ? '🌙' : '☀️') : '';
+
         d.innerHTML = `
+          ${isToday ? '<div class="today-badge">HOJE</div>' : ''}
           <div style="display:flex; justify-content:space-between; width:100%">
             <small style="color:var(--muted); font-size:0.75em">Dia</small>
             <strong style="font-size: 1em; color:var(--text)">${i}</strong>
           </div>
-          <div style="font-weight: 800; font-size: 1.4em; text-align:center; color: ${entry.h > 0 ? 'var(--primary)' : 'rgba(255,255,255,0.1)'}">
-            ${entry.h > 0 ? entry.h : '-'}
+          <div style="font-weight: 800; font-size: 1.4em; text-align:center; color: ${shiftColor}">
+            ${entry.h > 0 ? entry.h + '<span style="font-size:0.6em; margin-left:3px">' + shiftIcon + '</span>' : '-'}
           </div>
-          ${entry.h ? `<span class="badge ${entry.t === 'night' ? 'nighttime' : 'daytime'}">${entry.t === 'night' ? 'Noturna' : 'Diurna'}</span>` : '<div style="height:15px"></div>'}
+          ${entry.h ? `<span class="badge ${entry.t === 'proeis' ? 'badge-proeis' : 'badge-ras'}">${entry.t.toUpperCase()}</span>` : '<div style="height:15px"></div>'}
         `;
 
         d.onclick = () => openModal(i);
@@ -388,12 +558,118 @@
       updateSummary();
     }
 
+    function checkTodayAlarm() {
+      const today = new Date();
+      const tYear = today.getFullYear();
+      const tMonth = today.getMonth();
+      const tDay = today.getDate();
+      const todayKey = `${tYear}-${tMonth}`;
+      
+      if (data[todayKey] && data[todayKey][tDay] && data[todayKey][tDay].h > 0) {
+        const horas = data[todayKey][tDay].h;
+        const periodo = data[todayKey][tDay].t.toUpperCase();
+        const turno = data[todayKey][tDay].s === 'night' ? 'Noturno' : 'Diurno';
+        alarmSound.play().catch(e => console.log("Áudio bloqueado."));
+        alert(`⏰ AVISO DE SERVIÇO!\n\nHoje você está escalado para ${horas} horas de ${periodo} (${turno}).\n\nBom serviço, combatente!`);
+      } else {
+        alert("Nenhum serviço programado para o dia de hoje. Bom descanso!");
+      }
+    }
+
+    // --- FUNÇÃO NOVA: FAZER BACKUP ---
+    function backupData() {
+      // Junta os dados e as configurações em um único arquivo
+      const exportData = {
+        escala: JSON.parse(localStorage.getItem('pmServiceData')) || {},
+        config: JSON.parse(localStorage.getItem('pmConfig')) || {}
+      };
+      
+      // Converte para texto
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+      
+      // Cria um link invisível para forçar o download
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href", dataStr);
+      downloadAnchorNode.setAttribute("download", "backup_escala_pm.json");
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+      
+      alert("✅ Backup salvo!\nO arquivo 'backup_escala_pm.json' foi salvo na pasta de downloads do seu celular.");
+    }
+
+    function openConfigModal() {
+      document.getElementById('rankInput').value = config.rank || 'CB_SGT';
+      document.getElementById('maxHoursInput').value = config.maxHours || 120;
+      document.getElementById('proeisAllowanceInput').value = config.proeisAllowance !== undefined ? config.proeisAllowance : 35.00;
+      document.getElementById('rasAllowanceInput').value = config.rasAllowance !== undefined ? config.rasAllowance : 13.00;
+      configModal.showModal();
+    }
+
+    function saveConfig() {
+      config.rank = document.getElementById('rankInput').value;
+      config.maxHours = parseInt(document.getElementById('maxHoursInput').value) || 120;
+      config.proeisAllowance = parseFloat(document.getElementById('proeisAllowanceInput').value) || 0;
+      config.rasAllowance = parseFloat(document.getElementById('rasAllowanceInput').value) || 0;
+      
+      localStorage.setItem('pmConfig', JSON.stringify(config));
+      configModal.close();
+      
+      document.querySelector('.limit-text strong').textContent = config.maxHours + 'h';
+      updateSummary();
+    }
+
+    function exportToWhatsApp() {
+      const monthName = monthSelect.options[monthSelect.selectedIndex].text;
+      const yearName = yearSelect.value;
+      const totalH = totalEl.textContent;
+      const proeisH = proeisTotalEl.textContent;
+      const rasH = rasTotalEl.textContent;
+      const moneyText = moneyTotalEl.textContent;
+      const rankText = config.rank === 'SD' ? 'Soldado (SD)' : 'Cabo/Sargento';
+      
+      let msg = `*Controle de Serviço Extra* 🚓\n`;
+      msg += `Mês: ${monthName}/${yearName}\n`;
+      msg += `Graduação base: ${rankText}\n`;
+      msg += `-------------------------\n`;
+      msg += `Total de Horas: *${totalH}h*\n`;
+      msg += `🔵 PROEIS: ${proeisH}h\n`;
+      msg += `🟡 RAS: ${rasH}h\n`;
+      msg += `💰 *Estimativa a Receber: ${moneyText}*\n`;
+      msg += `-------------------------\n`;
+      msg += `*Escala do Mês:*\n`;
+      
+      const k = key();
+      let hasEntries = false;
+      
+      if (data[k]) {
+        for (let i = 1; i <= daysInMonth(); i++) {
+          if (data[k][i] && data[k][i].h > 0) {
+            const h = data[k][i].h;
+            const t = data[k][i].t.toUpperCase();
+            const s = data[k][i].s === 'night' ? '🌙 Noturno' : '☀️ Diurno';
+            const dayStr = i.toString().padStart(2, '0');
+            msg += `- Dia ${dayStr}: ${h}h | ${t} | ${s}\n`;
+            hasEntries = true;
+          }
+        }
+      }
+      
+      if (!hasEntries) {
+        msg += `_Nenhum serviço registrado neste mês._\n`;
+      }
+      
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      window.open(whatsappUrl, '_blank');
+    }
+
     function openModal(day) {
       selectedDay = day;
-      const entry = data[key()][day] || { h: 0, t: 'day' };
+      const entry = data[key()][day] || { h: 0, t: 'proeis', s: 'day' };
       modalDay.textContent = `${day} de ${monthSelect.options[monthSelect.selectedIndex].text}`;
       hoursInput.value = entry.h === 0 ? '' : entry.h;
       typeInput.value = entry.t;
+      shiftInput.value = entry.s || 'day';
       modal.showModal();
       setTimeout(() => hoursInput.focus(), 50);
     }
@@ -402,45 +678,56 @@
       let val = hoursInput.value === '' ? 0 : parseFloat(hoursInput.value);
       if(val < 0) val = 0;
       
-      data[key()][selectedDay] = { h: val, t: typeInput.value };
-      localStorage.setItem('extraHoursAdvanced', JSON.stringify(data));
+      data[key()][selectedDay] = { h: val, t: typeInput.value, s: shiftInput.value };
+      localStorage.setItem('pmServiceData', JSON.stringify(data));
       modal.close();
       renderCalendar();
     }
 
     function updateSummary() {
       const entries = Object.values(data[key()] || {});
-      let total = 0, dayT = 0, nightT = 0;
+      let total = 0, proeisT = 0, rasT = 0, moneyTotal = 0;
+      
+      const baseHourlyRate = config.rank === 'SD' ? (333 / 12) : (444 / 12);
+      const proeisAllow = config.proeisAllowance !== undefined ? config.proeisAllowance : 35.00;
+      const rasAllow = config.rasAllowance !== undefined ? config.rasAllowance : 13.00;
+      
       entries.forEach(e => {
         const h = parseFloat(e.h);
-        total += h;
-        e.t === 'night' ? nightT += h : dayT += h;
+        if (h > 0) {
+            total += h;
+            const allowance = e.t === 'proeis' ? proeisAllow : rasAllow;
+            moneyTotal += (h * baseHourlyRate) + allowance;
+            e.t === 'proeis' ? proeisT += h : rasT += h;
+        }
       });
       
       const fmt = (n) => Number.isInteger(n) ? n : n.toFixed(1);
+      const maxH = config.maxHours || 120;
 
       totalEl.textContent = fmt(total);
-      dayTotalEl.textContent = fmt(dayT);
-      nightTotalEl.textContent = fmt(nightT);
+      proeisTotalEl.textContent = fmt(proeisT);
+      rasTotalEl.textContent = fmt(rasT);
+      remainingEl.textContent = fmt(Math.max(0, maxH - total));
       
-      const remaining = Math.max(0, MAX_HOURS - total);
-      remainingEl.textContent = fmt(remaining);
+      moneyTotalEl.textContent = moneyTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
       
-      const pct = Math.min(100, (total / MAX_HOURS) * 100);
+      const pct = Math.min(100, (total / maxH) * 100);
       bar.style.width = pct + '%';
       bar.style.background = pct < 70 ? 'var(--ok)' : pct < 100 ? 'var(--warn)' : 'var(--danger)';
       bar.style.boxShadow = `0 0 15px ${pct < 70 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(245, 158, 11, 0.4)'}`;
     }
 
+    document.querySelector('.limit-text strong').textContent = (config.maxHours || 120) + 'h';
+    
     monthSelect.onchange = yearSelect.onchange = renderCalendar;
     initDateSelectors();
     renderCalendar();
 
-    // --- REGISTRO DO SERVICE WORKER (PWA) ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('SW registrado!', reg))
+          .then(reg => console.log('SW registrado!'))
           .catch(err => console.log('Erro no SW:', err));
       });
     }
