@@ -42,48 +42,6 @@
       padding: 15px 15px calc(40px + env(safe-area-inset-bottom)) 15px;
       min-height: 100vh;
       overscroll-behavior-y: none;
-      position: relative;
-    }
-
-    /* --- RELÓGIO DE FUNDO VINTAGE --- */
-    .bg-clock {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 90vw;
-      max-width: 450px;
-      opacity: 0.04; /* Discreto para não atrapalhar leitura */
-      z-index: -1; /* Fica no fundo */
-      pointer-events: none;
-      color: var(--primary);
-      transition: opacity 0.3s, color 0.3s;
-    }
-
-    /* Eixo de rotação dos ponteiros e animação realista */
-    #hour-hand, #min-hand, #sec-hand {
-      transform-origin: 50px 60px;
-    }
-    
-    #sec-hand {
-      transition: transform 0.1s cubic-bezier(0.4, 2.08, 0.55, 0.44); /* Efeito de 'tick' do ponteiro */
-    }
-
-    /* Animação do Relógio Tocando */
-    @keyframes ringShake {
-      0% { transform: translate(-50%, -50%) rotate(0deg); }
-      10% { transform: translate(-50%, -50%) rotate(-6deg); }
-      20% { transform: translate(-50%, -50%) rotate(6deg); }
-      30% { transform: translate(-50%, -50%) rotate(-6deg); }
-      40% { transform: translate(-50%, -50%) rotate(6deg); }
-      50% { transform: translate(-50%, -50%) rotate(0deg); }
-      100% { transform: translate(-50%, -50%) rotate(0deg); }
-    }
-
-    .bg-clock.ringing {
-      animation: ringShake 0.3s infinite;
-      opacity: 0.15;
-      color: var(--danger);
     }
 
     .header-container {
@@ -98,11 +56,11 @@
 
     .header-text { flex: 1; }
 
-    /* Estilização do bloco da Logo para doação */
     .logo-container {
       position: relative;
       cursor: pointer;
       transition: transform 0.2s;
+      -webkit-tap-highlight-color: transparent;
     }
     
     .logo-container:active { transform: scale(0.95); }
@@ -134,7 +92,7 @@
 
     h1 { 
       margin: 0; 
-      font-size: 1.6rem; 
+      font-size: 1.5rem; 
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -247,7 +205,6 @@
       padding: 20px;
       border: 1px solid rgba(255,255,255,0.05);
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-      position: relative;
     }
 
     .card h3 { 
@@ -329,6 +286,15 @@
       opacity: 1; filter: none;
     }
 
+    /* Estilo visual para os Finais de Semana */
+    .weekend {
+      background: rgba(248, 113, 113, 0.03);
+      border-color: rgba(248, 113, 113, 0.15);
+    }
+    .weekend .day-number {
+      color: #f87171 !important; 
+    }
+
     .today-badge {
       position: absolute; top: -8px; right: -5px; background: var(--primary);
       color: #000; font-size: 9px; font-weight: 800; padding: 2px 6px;
@@ -388,9 +354,45 @@
     
     .divider { height: 1px; background: rgba(255,255,255,0.1); margin: 15px 0; }
 
+    /* --- Estilos do Relógio de Fundo --- */
+    .background-clock-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90vmin; 
+      height: 90vmin;
+      z-index: -1; 
+      opacity: 0.04; 
+      pointer-events: none; 
+      overflow: visible;
+    }
+
+    .bg-clock-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .bg-clock-frame {
+      fill: var(--card);     
+      stroke: var(--primary); 
+      stroke-width: 2;
+    }
+
+    .bg-clock-accent {
+      fill: var(--primary);  
+    }
+    
+    .bg-clock-hands {
+      stroke: var(--primary);
+      stroke-width: 3;
+      stroke-linecap: round;
+    }
+
     @media (max-width: 900px) {
       .dashboard { grid-template-columns: 1fr; }
       .header-container { flex-direction: row; }
+      h1 { font-size: 1.3rem; }
       .calendar { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
       dialog { max-height: 90vh; overflow-y: auto; }
     }
@@ -398,35 +400,35 @@
 </head>
 <body>
 
+  <div class="background-clock-container">
+    <svg class="bg-clock-svg" viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
+      <path class="bg-clock-frame" d="M40,60 A30,30 0 1,1 70,30" fill="none"/>
+      <circle class="bg-clock-accent" cx="55" cy="30" r="5" />
+      <path class="bg-clock-frame" d="M130,30 A30,30 0 1,1 160,60" fill="none"/>
+      <circle class="bg-clock-accent" cx="145" cy="30" r="5" />
+      
+      <rect class="bg-clock-accent" x="95" y="10" width="10" height="35" rx="2" />
+      <circle class="bg-clock-accent" cx="100" cy="15" r="8" />
+
+      <circle class="bg-clock-frame" cx="100" cy="130" r="80" stroke-width="4" />
+      <circle class="bg-clock-frame" cx="100" cy="130" r="70" fill="none" opacity="0.5"/>
+      
+      <path class="bg-clock-frame" d="M45,200 L30,225" stroke-width="4" stroke-linecap="round"/>
+      <path class="bg-clock-frame" d="M155,200 L170,225" stroke-width="4" stroke-linecap="round"/>
+
+      <g transform="translate(100, 130)">
+        <path class="bg-clock-frame" d="M0,-65 L0,-55 M65,0 L55,0 M0,65 L0,55 M-65,0 L-55,0" stroke-width="3"/>
+        <line class="bg-clock-hands" x1="0" y1="0" x2="-30" y2="-30" />
+        <line class="bg-clock-hands" x1="0" y1="0" x2="40" y2="-20" stroke-width="2" />
+        <circle class="bg-clock-accent" cx="0" cy="0" r="5" />
+      </g>
+    </svg>
+  </div>
   <audio id="alarmSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
-
-  <svg class="bg-clock" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-    <line x1="28" y1="85" x2="18" y2="105" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
-    <line x1="72" y1="85" x2="82" y2="105" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
-    
-    <path d="M 45 25 C 20 15, 10 35, 20 45" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
-    <path d="M 55 25 C 80 15, 90 35, 80 45" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
-    
-    <circle cx="50" cy="16" r="4" fill="currentColor" />
-    <line x1="50" y1="20" x2="50" y2="30" stroke="currentColor" stroke-width="3"/>
-    
-    <circle cx="50" cy="60" r="32" fill="var(--bg)" stroke="currentColor" stroke-width="6"/>
-    
-    <line x1="50" y1="34" x2="50" y2="39" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-    <line x1="50" y1="81" x2="50" y2="86" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-    <line x1="24" y1="60" x2="29" y2="60" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-    <line x1="71" y1="60" x2="76" y2="60" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-
-    <line id="hour-hand" x1="50" y1="60" x2="50" y2="45" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-    <line id="min-hand" x1="50" y1="60" x2="50" y2="36" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-    <line id="sec-hand" x1="50" y1="65" x2="50" y2="34" stroke="var(--danger)" stroke-width="2" stroke-linecap="round"/>
-    
-    <circle cx="50" cy="60" r="3" fill="var(--primary-hover)" />
-  </svg>
 
   <header class="header-container">
     <div class="header-text">
-      <h1>CONTROLE DE HORA EXTRA</h1>
+      <h1>Controle de Hora Extra</h1>
       <p class="limit-text">Cota Mensal: <strong style="color:var(--text)">120h</strong></p>
     </div>
     <div class="logo-container" onclick="openDonateModal()" title="Apoiar o App">
@@ -542,12 +544,14 @@
       <span class="close-btn" onclick="configModal.close()">&times;</span>
     </div>
     
-    <label style="font-size: 13px; color: var(--muted); display:block; margin-bottom:2px">Sua Graduação</label>
+    <label style="font-size: 13px; color: var(--muted); display:block; margin-bottom:2px">Posto / Graduação</label>
     <select id="rankInput">
-      <option value="SD">Soldado (SD)</option>
-      <option value="CB_SGT">Cabo / Sargento (CB/SGT)</option>
+      <option value="A">Oficiais Superiores (Nível A)</option>
+      <option value="B">Capitães e Tenentes (Nível B)</option>
+      <option value="C">Subtenentes e Sargentos (Nível C)</option>
+      <option value="D">Cabos e Soldados (Nível D)</option>
     </select>
-    <span class="hint-text">Define o valor base de R$ 333 ou R$ 444.</span>
+    <span class="hint-text">Define o valor base de cálculo conforme a tabela vigente (Ex: R$ 383,05 para 12h de SD/CB).</span>
 
     <label style="font-size: 13px; color: var(--muted); display:block; margin-bottom:2px">Cota Mensal Máxima (Horas)</label>
     <input type="number" id="maxHoursInput" min="0" placeholder="Ex: 120" />
@@ -583,39 +587,21 @@
     const monthSelect = document.getElementById('month');
     const yearSelect = document.getElementById('year');
     const alarmSound = document.getElementById('alarmSound');
-    const bgClock = document.querySelector('.bg-clock');
 
     let selectedDay;
     let data = JSON.parse(localStorage.getItem('pmServiceData')) || {};
     
     let config = JSON.parse(localStorage.getItem('pmConfig')) || { 
-      rank: 'CB_SGT', 
+      rank: 'D', 
       maxHours: 120,
       proeisAllowance: 35.00,
       rasAllowance: 13.00
     };
 
+    // Fechar modais ao clicar fora
     [modal, configModal, donateModal].forEach(m => {
       m.addEventListener('click', (event) => { if (event.target === m) m.close(); });
     });
-
-    // --- LÓGICA DOS PONTEIROS DO RELÓGIO DE FUNDO ---
-    function updateClockHands() {
-      const now = new Date();
-      const sec = now.getSeconds();
-      const min = now.getMinutes();
-      const hour = now.getHours();
-
-      const secDeg = sec * 6;
-      const minDeg = min * 6 + (sec * 0.1);
-      const hourDeg = (hour % 12) * 30 + (min * 0.5);
-
-      document.getElementById('sec-hand').style.transform = `rotate(${secDeg}deg)`;
-      document.getElementById('min-hand').style.transform = `rotate(${minDeg}deg)`;
-      document.getElementById('hour-hand').style.transform = `rotate(${hourDeg}deg)`;
-    }
-    setInterval(updateClockHands, 1000);
-    updateClockHands();
 
     function initDateSelectors() {
       const now = new Date();
@@ -653,20 +639,27 @@
         const selYear = Number(yearSelect.value);
         const selMonth = Number(monthSelect.value);
         
+        const currentIterDate = new Date(selYear, selMonth, i);
+        const dayOfWeek = currentIterDate.getDay();
+        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6); // 0 = Domingo, 6 = Sábado
+        
         const isPastDay = (selYear < currentYear) || 
                           (selYear === currentYear && selMonth < currentMonth) || 
                           (selYear === currentYear && selMonth === currentMonth && i < currentDay);
                           
         const isToday = (selYear === currentYear && selMonth === currentMonth && i === currentDay);
 
+        if (isWeekend) d.classList.add('weekend');
         if (isPastDay && !isToday) d.classList.add('past-day');
         if (isToday) d.classList.add('today-highlight');
 
+        // Borda de acordo com as horas
         if (entry.h > 0 && entry.h <= 6) d.classList.add('low');
         else if (entry.h > 6 && entry.h <= 8) d.classList.add('medium');
         else if (entry.h === 12) d.classList.add('twelve');
         else if (entry.h > 12) d.classList.add('high');
 
+        // Define cor e ícone baseados no turno (Diurno/Noturno)
         const shiftColor = entry.h > 0 ? (entry.s === 'night' ? 'var(--night)' : 'var(--day)') : 'rgba(255,255,255,0.1)';
         const shiftIcon = entry.h > 0 ? (entry.s === 'night' ? '🌙' : '☀️') : '';
 
@@ -674,7 +667,7 @@
           ${isToday ? '<div class="today-badge">HOJE</div>' : ''}
           <div style="display:flex; justify-content:space-between; width:100%">
             <small style="color:var(--muted); font-size:0.75em">Dia</small>
-            <strong style="font-size: 1em; color:var(--text)">${i}</strong>
+            <strong class="day-number" style="font-size: 1em; color:var(--text)">${i}</strong>
           </div>
           <div style="font-weight: 800; font-size: 1.4em; text-align:center; color: ${shiftColor}">
             ${entry.h > 0 ? entry.h + '<span style="font-size:0.6em; margin-left:3px">' + shiftIcon + '</span>' : '-'}
@@ -726,15 +719,13 @@
       }
 
       if (hasService) {
-        // Toca som e faz o relógio do fundo tremer
         alarmSound.play().catch(e => console.log("Áudio bloqueado."));
-        bgClock.classList.add('ringing');
-        setTimeout(() => bgClock.classList.remove('ringing'), 4000); // Para após 4 segundos
       }
 
       alert(`⏰ ALERTA DE SERVIÇOS ⏰\n\n${msg}\nBom descanso e bom serviço, combatente!`);
     }
 
+    // --- FUNÇÕES DE DOAÇÃO ---
     function openDonateModal() {
       donateModal.showModal();
     }
@@ -767,7 +758,12 @@
     }
 
     function openConfigModal() {
-      document.getElementById('rankInput').value = config.rank || 'CB_SGT';
+      // Conversão automática para compatibilidade com dados antigos salvos
+      let currentRank = config.rank || 'D';
+      if (currentRank === 'SD') currentRank = 'D';
+      if (currentRank === 'CB_SGT') currentRank = 'C';
+
+      document.getElementById('rankInput').value = currentRank;
       document.getElementById('maxHoursInput').value = config.maxHours || 120;
       document.getElementById('proeisAllowanceInput').value = config.proeisAllowance !== undefined ? config.proeisAllowance : 35.00;
       document.getElementById('rasAllowanceInput').value = config.rasAllowance !== undefined ? config.rasAllowance : 13.00;
@@ -794,11 +790,15 @@
       const proeisH = proeisTotalEl.textContent;
       const rasH = rasTotalEl.textContent;
       const moneyText = moneyTotalEl.textContent;
-      const rankText = config.rank === 'SD' ? 'Soldado (SD)' : 'Cabo/Sargento';
+      
+      let rankText = 'Cabos e Soldados (Nível D)';
+      if (config.rank === 'A') rankText = 'Oficiais Superiores (Nível A)';
+      if (config.rank === 'B') rankText = 'Capitães e Tenentes (Nível B)';
+      if (config.rank === 'C' || config.rank === 'CB_SGT') rankText = 'Subtenentes e Sargentos (Nível C)';
       
       let msg = `*Controle de Serviço Extra* 🚓\n`;
       msg += `Mês: ${monthName}/${yearName}\n`;
-      msg += `Graduação base: ${rankText}\n`;
+      msg += `Posto/Graduação: ${rankText}\n`;
       msg += `-------------------------\n`;
       msg += `Total de Horas: *${totalH}h*\n`;
       msg += `🔵 PROEIS: ${proeisH}h\n`;
@@ -856,7 +856,15 @@
       const entries = Object.values(data[key()] || {});
       let total = 0, proeisT = 0, rasT = 0, moneyTotal = 0;
       
-      const baseHourlyRate = config.rank === 'SD' ? (333 / 12) : (444 / 12);
+      // Define o valor base de 12h conforme o Posto/Graduação da tabela atualizada
+      let base12hValue = 383.05; // Padrão: Nível D (Cabos e Soldados)
+      if (config.rank === 'A') base12hValue = 756.07;
+      else if (config.rank === 'B') base12hValue = 604.85;
+      else if (config.rank === 'C' || config.rank === 'CB_SGT') base12hValue = 453.64;
+      
+      // O valor da hora é o valor de 12h dividido por 12
+      const baseHourlyRate = base12hValue / 12;
+      
       const proeisAllow = config.proeisAllowance !== undefined ? config.proeisAllowance : 35.00;
       const rasAllow = config.rasAllowance !== undefined ? config.rasAllowance : 13.00;
       
@@ -902,5 +910,4 @@
   </script>
 
 </body>
-
 </html>
