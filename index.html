@@ -530,7 +530,7 @@
       <span class="close-btn" onclick="donateModal.close()">&times;</span>
     </div>
     <p style="font-size: 0.95rem; color: var(--muted); line-height: 1.5; margin-bottom: 20px;">
-      Este app foi feito para facilitar sua rotina. Se ele tem sido útil, considere fazer uma doação simbólica de <strong>R$ 1,00</strong> pelo PIX para apoiar o desenvolvedor e manter as atualizações!
+      Este app foi feito para facilitar sua rotina. Se ele tem sido útil, considere fazer uma doação simbólica de <strong>R$ 2,00</strong> pelo PIX para apoiar o desenvolvedor e manter as atualizações!
     </p>
     
     <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; text-align: center; border: 1px dashed var(--primary); margin-bottom: 15px;">
@@ -797,30 +797,49 @@
         try {
           const importedData = JSON.parse(e.target.result);
           
+          // Verifica se é o formato novo { escala: {...}, config: {...} }
           if (importedData.escala || importedData.config) {
             if (importedData.escala) {
-              localStorage.setItem('pmServiceData', JSON.stringify(importedData.escala));
               data = importedData.escala; 
+              localStorage.setItem('pmServiceData', JSON.stringify(data));
             }
             if (importedData.config) {
-              localStorage.setItem('pmConfig', JSON.stringify(importedData.config));
               config = importedData.config; 
+              localStorage.setItem('pmConfig', JSON.stringify(config));
             }
-            
-            backupModal.close(); 
-            document.querySelector('.limit-text strong').textContent = (config.maxHours || 120) + 'h';
-            renderCalendar(); 
-            
-            alert("✅ Dados importados com sucesso!");
-          } else {
+          } 
+          // Verifica se é o formato antigo/legado (apenas os lançamentos de datas)
+          else if (Object.keys(importedData).some(k => k.includes('-'))) {
+             data = importedData;
+             localStorage.setItem('pmServiceData', JSON.stringify(data));
+          } 
+          else {
             alert("❌ O arquivo não parece conter um backup válido do app.");
+            event.target.value = '';
+            return;
           }
+
+          backupModal.close(); 
+          
+          // Atualiza a cota visual
+          if (config.maxHours) {
+            document.querySelector('.limit-text strong').textContent = config.maxHours + 'h';
+          }
+          
+          // Força a atualização do calendário e do painel financeiro
+          renderCalendar(); 
+          updateSummary(); 
+          
+          alert("✅ Dados importados com sucesso!");
+          
         } catch (error) {
+          console.error("Erro ao importar:", error);
           alert("❌ Erro ao ler o arquivo. Tem certeza que é um arquivo JSON válido?");
         }
       };
+      
       reader.readAsText(file);
-      event.target.value = '';
+      event.target.value = ''; // Reseta o input para permitir nova importação do mesmo arquivo
     }
 
     function openConfigModal() {
