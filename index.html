@@ -44,6 +44,20 @@
       overscroll-behavior-y: none;
     }
 
+    /* --- NOVA CLASSE PARA FIXAR O TOPO --- */
+    .sticky-wrapper {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(2, 6, 23, 0.85); /* Fundo escuro com transparência */
+      backdrop-filter: blur(12px); /* Efeito de vidro borrado */
+      -webkit-backdrop-filter: blur(12px);
+      margin: -15px -15px 20px -15px; /* Compensa o padding do body */
+      padding: 15px 15px 20px 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 4px 25px rgba(0,0,0,0.6);
+    }
+
     .header-container {
       display: flex;
       justify-content: space-between;
@@ -108,7 +122,6 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      margin-bottom: 25px;
       max-width: 1200px;
       margin-left: auto;
       margin-right: auto;
@@ -286,7 +299,6 @@
       opacity: 1; filter: none;
     }
 
-    /* Estilo visual para os Finais de Semana */
     .weekend {
       background: rgba(248, 113, 113, 0.03);
       border-color: rgba(248, 113, 113, 0.15);
@@ -426,27 +438,28 @@
   </div>
   <audio id="alarmSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
-  <header class="header-container">
-    <div class="header-text">
-      <h1>Controle de Hora Extra</h1>
-      <p class="limit-text">Cota Mensal: <strong style="color:var(--text)">120h</strong></p>
-    </div>
-    <div class="logo-container" onclick="openDonateModal()" title="Apoiar o App">
-      <img src="icon-512.png" alt="Logo" class="logo-app" onerror="this.src='https://placehold.co/90x90/orange/white?text=PM'">
-      <div class="donate-badge">💖</div>
-    </div>
-  </header>
+  <div class="sticky-wrapper">
+    <header class="header-container">
+      <div class="header-text">
+        <h1>Controle de Hora Extra</h1>
+        <p class="limit-text">Cota Mensal: <strong style="color:var(--text)">120h</strong></p>
+      </div>
+      <div class="logo-container" onclick="openDonateModal()" title="Apoiar o App">
+        <img src="icon-512.png" alt="Logo" class="logo-app" onerror="this.src='https://placehold.co/90x90/orange/white?text=PM'">
+        <div class="donate-badge">💖</div>
+      </div>
+    </header>
 
-  <div class="top-controls">
-    <div class="select-group">
-      <select id="month"></select>
-      <select id="year"></select>
-      <button class="btn-icon" onclick="backupData()" title="Salvar Backup">💾</button>
-      <button class="btn-icon" onclick="openConfigModal()" title="Configurações">⚙️</button>
+    <div class="top-controls">
+      <div class="select-group">
+        <select id="month"></select>
+        <select id="year"></select>
+        <button class="btn-icon" onclick="openBackupModal()" title="Dados e Backup">💾</button>
+        <button class="btn-icon" onclick="openConfigModal()" title="Configurações">⚙️</button>
+      </div>
+      <button class="btn-action" onclick="checkAlarms()">🔔 Checar Serviços (Hoje/Amanhã)</button>
     </div>
-    <button class="btn-action" onclick="checkAlarms()">🔔 Checar Serviços (Hoje/Amanhã)</button>
   </div>
-
   <div class="dashboard">
     <div class="card">
       <h3>Resumo do Mês</h3>
@@ -490,6 +503,26 @@
       <div class="calendar" id="calendar"></div>
     </div>
   </div>
+
+  <dialog id="backupModal">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+      <h3 style="margin:0; font-size: 1.2rem; color: var(--primary);">Dados e Backup</h3>
+      <span class="close-btn" onclick="backupModal.close()">&times;</span>
+    </div>
+    <p style="font-size: 0.9rem; color: var(--muted); margin-bottom: 20px; line-height: 1.4;">
+      Salve seus lançamentos para não perdê-los, ou importe um arquivo de backup anterior.
+    </p>
+    
+    <button onclick="backupData()" style="margin-bottom: 15px; background: rgba(16, 185, 129, 0.15); color: var(--ok); border: 1px solid var(--ok); box-shadow: none;">
+      💾 Salvar Backup
+    </button>
+    
+    <button onclick="document.getElementById('importInput').click()" style="background: rgba(56, 189, 248, 0.15); color: var(--night); border: 1px solid var(--night); box-shadow: none;">
+      📥 Importar Backup
+    </button>
+    
+    <input type="file" id="importInput" style="display:none" accept=".json" onchange="importData(event)">
+  </dialog>
 
   <dialog id="donateModal">
     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
@@ -561,10 +594,10 @@
     <h4 style="margin: 0 0 10px 0; font-size: 1rem; color: var(--primary);">Ajuda de Custo (R$)</h4>
 
     <label style="font-size: 13px; color: var(--muted); display:block; margin-bottom:2px">PROEIS (Passagem/Alimentação)</label>
-    <input type="number" id="proeisAllowanceInput" min="0" step="0.01" placeholder="Ex: 35.00" />
+    <input type="number" id="proeisAllowanceInput" min="0" step="0.01" placeholder="Ex: 78.36" />
 
     <label style="font-size: 13px; color: var(--muted); display:block; margin-bottom:2px">RAS (Passagem)</label>
-    <input type="number" id="rasAllowanceInput" min="0" step="0.01" placeholder="Ex: 13.00" />
+    <input type="number" id="rasAllowanceInput" min="0" step="0.01" placeholder="Ex: 17.10" />
     
     <button onclick="saveConfig()" style="background: var(--ok); color: #000;">SALVAR CONFIGURAÇÕES</button>
   </dialog>
@@ -574,6 +607,7 @@
     const modal = document.getElementById('modal');
     const configModal = document.getElementById('configModal');
     const donateModal = document.getElementById('donateModal');
+    const backupModal = document.getElementById('backupModal');
     const modalDay = document.getElementById('modalDay');
     const hoursInput = document.getElementById('hoursInput');
     const typeInput = document.getElementById('typeInput');
@@ -594,12 +628,11 @@
     let config = JSON.parse(localStorage.getItem('pmConfig')) || { 
       rank: 'D', 
       maxHours: 120,
-      proeisAllowance: 35.00,
-      rasAllowance: 13.00
+      proeisAllowance: 78.36,
+      rasAllowance: 17.10
     };
 
-    // Fechar modais ao clicar fora
-    [modal, configModal, donateModal].forEach(m => {
+    [modal, configModal, donateModal, backupModal].forEach(m => {
       m.addEventListener('click', (event) => { if (event.target === m) m.close(); });
     });
 
@@ -641,7 +674,7 @@
         
         const currentIterDate = new Date(selYear, selMonth, i);
         const dayOfWeek = currentIterDate.getDay();
-        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6); // 0 = Domingo, 6 = Sábado
+        const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
         
         const isPastDay = (selYear < currentYear) || 
                           (selYear === currentYear && selMonth < currentMonth) || 
@@ -653,13 +686,11 @@
         if (isPastDay && !isToday) d.classList.add('past-day');
         if (isToday) d.classList.add('today-highlight');
 
-        // Borda de acordo com as horas
         if (entry.h > 0 && entry.h <= 6) d.classList.add('low');
         else if (entry.h > 6 && entry.h <= 8) d.classList.add('medium');
         else if (entry.h === 12) d.classList.add('twelve');
         else if (entry.h > 12) d.classList.add('high');
 
-        // Define cor e ícone baseados no turno (Diurno/Noturno)
         const shiftColor = entry.h > 0 ? (entry.s === 'night' ? 'var(--night)' : 'var(--day)') : 'rgba(255,255,255,0.1)';
         const shiftIcon = entry.h > 0 ? (entry.s === 'night' ? '🌙' : '☀️') : '';
 
@@ -725,10 +756,7 @@
       alert(`⏰ ALERTA DE SERVIÇOS ⏰\n\n${msg}\nBom descanso e bom serviço, combatente!`);
     }
 
-    // --- FUNÇÕES DE DOAÇÃO ---
-    function openDonateModal() {
-      donateModal.showModal();
-    }
+    function openDonateModal() { donateModal.showModal(); }
 
     function copyPix() {
       const pixKey = document.getElementById('pixKey').innerText;
@@ -738,6 +766,8 @@
         alert("Erro ao copiar a chave. Tente selecionar e copiar manualmente.");
       });
     }
+
+    function openBackupModal() { backupModal.showModal(); }
 
     function backupData() {
       const exportData = {
@@ -754,11 +784,46 @@
       downloadAnchorNode.click();
       downloadAnchorNode.remove();
       
+      backupModal.close();
       alert("✅ Backup salvo!\nO arquivo 'backup_escala_pm.json' foi baixado no seu dispositivo.");
     }
 
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          
+          if (importedData.escala || importedData.config) {
+            if (importedData.escala) {
+              localStorage.setItem('pmServiceData', JSON.stringify(importedData.escala));
+              data = importedData.escala; 
+            }
+            if (importedData.config) {
+              localStorage.setItem('pmConfig', JSON.stringify(importedData.config));
+              config = importedData.config; 
+            }
+            
+            backupModal.close(); 
+            document.querySelector('.limit-text strong').textContent = (config.maxHours || 120) + 'h';
+            renderCalendar(); 
+            
+            alert("✅ Dados importados com sucesso!");
+          } else {
+            alert("❌ O arquivo não parece conter um backup válido do app.");
+          }
+        } catch (error) {
+          alert("❌ Erro ao ler o arquivo. Tem certeza que é um arquivo JSON válido?");
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
     function openConfigModal() {
-      // Conversão automática para compatibilidade com dados antigos salvos
       let currentRank = config.rank || 'D';
       if (currentRank === 'SD') currentRank = 'D';
       if (currentRank === 'CB_SGT') currentRank = 'C';
@@ -823,9 +888,7 @@
         }
       }
       
-      if (!hasEntries) {
-        msg += `_Nenhum serviço registrado neste mês._\n`;
-      }
+      if (!hasEntries) { msg += `_Nenhum serviço registrado neste mês._\n`; }
       
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
       window.open(whatsappUrl, '_blank');
@@ -856,15 +919,12 @@
       const entries = Object.values(data[key()] || {});
       let total = 0, proeisT = 0, rasT = 0, moneyTotal = 0;
       
-      // Define o valor base de 12h conforme o Posto/Graduação da tabela atualizada
-      let base12hValue = 383.05; // Padrão: Nível D (Cabos e Soldados)
+      let base12hValue = 383.05; 
       if (config.rank === 'A') base12hValue = 756.07;
       else if (config.rank === 'B') base12hValue = 604.85;
       else if (config.rank === 'C' || config.rank === 'CB_SGT') base12hValue = 453.64;
       
-      // O valor da hora é o valor de 12h dividido por 12
       const baseHourlyRate = base12hValue / 12;
-      
       const proeisAllow = config.proeisAllowance !== undefined ? config.proeisAllowance : 35.00;
       const rasAllow = config.rasAllowance !== undefined ? config.rasAllowance : 13.00;
       
