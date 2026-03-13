@@ -26,6 +26,7 @@
       --danger: #ef4444;  
       --proeis: #3b82f6; 
       --ras: #fbbf24; 
+      --ordinario: #64748b; /* Cor para serviço ordinário */
       --day: #fbbf24;     
       --night: #38bdf8;   
       --text: #f8fafc;
@@ -325,6 +326,7 @@
 
     .badge-proeis { background: var(--proeis); color: #fff; }
     .badge-ras { background: var(--ras); color: #000; }
+    .badge-ordinario { background: var(--ordinario); color: #fff; }
 
     dialog {
       border: 1px solid var(--primary);
@@ -560,6 +562,7 @@
     <select id="typeInput">
       <option value="proeis">👮 PROEIS</option>
       <option value="ras">🚓 RAS</option>
+      <option value="ordinario">🛡️ Ordinário</option>
     </select>
 
     <label style="font-size: 13px; color: var(--muted); display:block; margin-bottom:2px">Turno</label>
@@ -703,7 +706,7 @@
           <div style="font-weight: 800; font-size: 1.4em; text-align:center; color: ${shiftColor}">
             ${entry.h > 0 ? entry.h + '<span style="font-size:0.6em; margin-left:3px">' + shiftIcon + '</span>' : '-'}
           </div>
-          ${entry.h ? `<span class="badge ${entry.t === 'proeis' ? 'badge-proeis' : 'badge-ras'}">${entry.t.toUpperCase()}</span>` : '<div style="height:15px"></div>'}
+          ${entry.h ? `<span class="badge ${entry.t === 'proeis' ? 'badge-proeis' : entry.t === 'ras' ? 'badge-ras' : 'badge-ordinario'}">${entry.t === 'ordinario' ? 'ORD' : entry.t.toUpperCase()}</span>` : '<div style="height:15px"></div>'}
         `;
 
         d.onclick = () => openModal(i);
@@ -731,7 +734,7 @@
 
       if (data[todayKey] && data[todayKey][tDay] && data[todayKey][tDay].h > 0) {
         const horas = data[todayKey][tDay].h;
-        const periodo = data[todayKey][tDay].t.toUpperCase();
+        const periodo = data[todayKey][tDay].t === 'ordinario' ? 'ORDINÁRIO' : data[todayKey][tDay].t.toUpperCase();
         const turno = data[todayKey][tDay].s === 'night' ? 'Noturno' : 'Diurno';
         msg += `🚨 HOJE: Escala de ${horas}h de ${periodo} (${turno}).\n`;
         hasService = true;
@@ -741,7 +744,7 @@
 
       if (data[tomorrowKey] && data[tomorrowKey][tomDay] && data[tomorrowKey][tomDay].h > 0) {
         const horas = data[tomorrowKey][tomDay].h;
-        const periodo = data[tomorrowKey][tomDay].t.toUpperCase();
+        const periodo = data[tomorrowKey][tomDay].t === 'ordinario' ? 'ORDINÁRIO' : data[tomorrowKey][tomDay].t.toUpperCase();
         const turno = data[tomorrowKey][tomDay].s === 'night' ? 'Noturno' : 'Diurno';
         msg += `\n🚨 AMANHÃ: Prepare fardamento! Escala de ${horas}h de ${periodo} (${turno}).\n`;
         hasService = true;
@@ -797,7 +800,6 @@
         try {
           const importedData = JSON.parse(e.target.result);
           
-          // Verifica se é o formato novo { escala: {...}, config: {...} }
           if (importedData.escala || importedData.config) {
             if (importedData.escala) {
               data = importedData.escala; 
@@ -808,7 +810,6 @@
               localStorage.setItem('pmConfig', JSON.stringify(config));
             }
           } 
-          // Verifica se é o formato antigo/legado (apenas os lançamentos de datas)
           else if (Object.keys(importedData).some(k => k.includes('-'))) {
              data = importedData;
              localStorage.setItem('pmServiceData', JSON.stringify(data));
@@ -821,12 +822,10 @@
 
           backupModal.close(); 
           
-          // Atualiza a cota visual
           if (config.maxHours) {
             document.querySelector('.limit-text strong').textContent = config.maxHours + 'h';
           }
           
-          // Força a atualização do calendário e do painel financeiro
           renderCalendar(); 
           updateSummary(); 
           
@@ -839,7 +838,7 @@
       };
       
       reader.readAsText(file);
-      event.target.value = ''; // Reseta o input para permitir nova importação do mesmo arquivo
+      event.target.value = ''; 
     }
 
     function openConfigModal() {
@@ -884,7 +883,7 @@
       msg += `Mês: ${monthName}/${yearName}\n`;
       msg += `Posto/Graduação: ${rankText}\n`;
       msg += `-------------------------\n`;
-      msg += `Total de Horas: *${totalH}h*\n`;
+      msg += `Total de Horas Extra: *${totalH}h*\n`;
       msg += `🔵 PROEIS: ${proeisH}h\n`;
       msg += `🟡 RAS: ${rasH}h\n`;
       msg += `💰 *Estimativa a Receber: ${moneyText}*\n`;
@@ -898,10 +897,11 @@
         for (let i = 1; i <= daysInMonth(); i++) {
           if (data[k][i] && data[k][i].h > 0) {
             const h = data[k][i].h;
-            const t = data[k][i].t.toUpperCase();
+            let tStr = data[k][i].t.toUpperCase();
+            if (data[k][i].t === 'ordinario') tStr = 'ORDINÁRIO';
             const s = data[k][i].s === 'night' ? '🌙 Noturno' : '☀️ Diurno';
             const dayStr = i.toString().padStart(2, '0');
-            msg += `- Dia ${dayStr}: ${h}h | ${t} | ${s}\n`;
+            msg += `- Dia ${dayStr}: ${h}h | ${tStr} | ${s}\n`;
             hasEntries = true;
           }
         }
@@ -949,7 +949,7 @@
       
       entries.forEach(e => {
         const h = parseFloat(e.h);
-        if (h > 0) {
+        if (h > 0 && e.t !== 'ordinario') { // Ignora serviços ordinários no cálculo
             total += h;
             const allowance = e.t === 'proeis' ? proeisAllow : rasAllow;
             moneyTotal += (h * baseHourlyRate) + allowance;
