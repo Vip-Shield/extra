@@ -676,6 +676,9 @@
       const currentYear = todayDate.getFullYear();
       const currentMonth = todayDate.getMonth();
       const currentDay = todayDate.getDate();
+      
+      // Array com as abreviações dos dias da semana
+      const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
       for (let i = 1; i <= daysInMonth(); i++) {
         const entry = data[k][i] || {};
@@ -698,6 +701,8 @@
         
         const currentIterDate = new Date(selYear, selMonth, i);
         const dayOfWeek = currentIterDate.getDay();
+        const dayName = weekDays[dayOfWeek]; // Pega o nome do dia correspondente
+        
         const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
         
         const isPastDay = (selYear < currentYear) || 
@@ -749,9 +754,9 @@
 
         d.innerHTML = `
           ${isToday ? '<div class="today-badge">HOJE</div>' : ''}
-          <div style="display:flex; justify-content:space-between; width:100%; margin-bottom: 5px;">
-            <small style="color:var(--muted); font-size:0.75em">Dia</small>
-            <strong class="day-number" style="font-size: 1em; color:var(--text)">${i}</strong>
+          <div style="display:flex; justify-content:space-between; width:100%; margin-bottom: 5px; align-items: baseline;">
+            <small style="color:var(--muted); font-size:0.8em; font-weight:600;">${dayName}</small>
+            <strong class="day-number" style="font-size: 1.1em; color:var(--text)">${i}</strong>
           </div>
           <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
             ${contentHtml}
@@ -1011,6 +1016,15 @@
       
       if(extraH < 0) extraH = 0;
       if(ordH < 0) ordH = 0;
+      
+      // Trava de segurança: Verifica se há conflito de turnos
+      if (extraH > 0 && ordH > 0) {
+        if (shiftInput.value === ordShiftInput.value) {
+          const nomeTurno = shiftInput.value === 'day' ? '☀️ Diurno' : '🌙 Noturno';
+          alert(`⚠️ CONFLITO DE TURNO!\n\nVocê está tentando lançar o serviço Ordinário e o Extra no mesmo turno (${nomeTurno}).\n\nAltere um dos turnos para conseguir salvar.`);
+          return; // Para a execução aqui e não deixa salvar
+        }
+      }
       
       data[key()][selectedDay] = { 
         h: extraH, 
